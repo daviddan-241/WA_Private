@@ -4,187 +4,202 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>WA Private</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-/* WhatsApp/Zangi-like Styles */
-body{font-family:sans-serif;background:#ECE5DD;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;}
-.container,#app-screen,#subscription-screen{width:95%;max-width:400px;background:#fff;border-radius:25px;padding:30px;box-shadow:0 5px 15px rgba(0,0,0,0.2);text-align:center;}
-h2,h3,h4{margin-bottom:15px;}
-input,select{display:block;width:85%;margin:10px auto;padding:12px;border-radius:25px;border:1px solid #ccc;font-size:16px;}
-button{width:85%;margin:12px auto;padding:12px;border-radius:25px;border:none;font-size:16px;cursor:pointer;background-color:#25D366;color:white;font-weight:bold;}
-#chat-list{margin-top:15px;text-align:left;}
-.chat-item{background:#DCF8C6;padding:10px;margin-bottom:10px;border-radius:15px;}
-video{border-radius:15px;margin-top:10px;width:100%;background:#000;}
-</style>
+/* --- General Body & Font --- */
+body {margin:0; padding:0; font-family:'Roboto', sans-serif; background:#ECE5DD;}
 
-<!-- Firebase -->
+/* --- WhatsApp/Zangi Main Layout --- */
+#app {max-width:400px; margin:0 auto; background:#fff; height:100vh; display:flex; flex-direction:column;}
+
+/* --- Header --- */
+header {background:#075E54; color:#fff; padding:15px; display:flex; align-items:center; justify-content:space-between;}
+header img {width:40px; height:40px; border-radius:50%;}
+header h2 {margin:0; font-size:18px; font-weight:500;}
+
+/* --- Chat List --- */
+#chat-list {flex:1; overflow-y:auto; padding:10px;}
+.chat {padding:8px 12px; border-radius:20px; margin-bottom:8px; max-width:75%; position:relative; display:inline-block; word-wrap:break-word;}
+.chat.outgoing {background:#DCF8C6; align-self:flex-end; margin-left:auto;}
+.chat.incoming {background:#fff; align-self:flex-start; margin-right:auto;}
+.chat-time {font-size:10px; color:#999; margin-top:2px; text-align:right;}
+
+/* --- Input Bar --- */
+#input-bar {display:flex; align-items:center; padding:8px; border-top:1px solid #ccc;}
+#input-bar input {flex:1; padding:10px; border-radius:25px; border:1px solid #ccc; font-size:14px;}
+#input-bar button {margin-left:5px; padding:10px 12px; border:none; border-radius:50%; background:#25D366; color:#fff; cursor:pointer; font-weight:bold;}
+
+/* --- Settings --- */
+#settings {padding:15px; background:#f0f0f0; display:none; flex-direction:column;}
+#settings input, #settings select {margin-bottom:10px; padding:10px; border-radius:25px; border:1px solid #ccc;}
+#settings button {background:#25D366; color:#fff; padding:12px; border:none; border-radius:25px; font-weight:bold; cursor:pointer;}
+
+/* --- Hidden Toolbar --- */
+#hidden-toolbar {padding:15px; background:#e0f7fa; display:none; flex-direction:column;}
+#hidden-toolbar button {margin-top:8px; background:#0097A7; color:#fff; padding:10px; border:none; border-radius:15px; cursor:pointer;}
+
+/* --- Video Call --- */
+#call-screen {display:none; flex-direction:column; align-items:center; justify-content:center; padding:15px; background:#000; color:#fff; height:100vh;}
+#call-screen video {width:90%; max-height:300px; border-radius:15px; margin-bottom:10px;}
+#call-screen button {margin:5px; padding:10px 15px; border:none; border-radius:15px; background:#25D366; color:#fff; cursor:pointer;}
+
+/* --- Subscription --- */
+#subscription {display:none; padding:15px; background:#fff; flex-direction:column; text-align:center;}
+#subscription button {margin:5px; padding:10px 15px; border:none; border-radius:25px; background:#25D366; color:#fff; cursor:pointer; font-weight:bold;}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <!-- Header -->
+  <header>
+    <img id="profilePicHeader" src="https://via.placeholder.com/40" alt="Profile">
+    <h2 id="userNameHeader">WA Private</h2>
+    <button onclick="openSettings()">⚙️</button>
+  </header>
+
+  <!-- Chat List -->
+  <div id="chat-list">
+    <div class="chat incoming">
+      Welcome to WA Private!
+      <div class="chat-time">12:00 PM</div>
+    </div>
+  </div>
+
+  <!-- Input Bar -->
+  <div id="input-bar">
+    <input type="text" id="messageInput" placeholder="Type a message">
+    <button onclick="sendMessage()">➡️</button>
+  </div>
+
+  <!-- Settings Screen -->
+  <div id="settings">
+    <h3>Settings</h3>
+    <input type="text" id="displayName" placeholder="Display Name">
+    <input type="file" id="profilePic" accept="image/*">
+    <select id="themeSelect">
+      <option value="light">Light</option>
+      <option value="dark">Dark</option>
+    </select>
+    <button onclick="saveSettings()">Save</button>
+    <button onclick="logout()">Logout</button>
+    <button onclick="openPrivacy()">Privacy & Security</button>
+  </div>
+
+  <!-- Hidden Features -->
+  <div id="hidden-toolbar">
+    <h4>Hidden Features</h4>
+    <input type="file" id="uploadVoice" accept="audio/*">
+    <input type="file" id="uploadVideo" accept="video/*">
+    <button onclick="toggleMedia()">Switch Uploaded Media</button>
+  </div>
+
+  <!-- Video Call Screen -->
+  <div id="call-screen">
+    <video id="localVideo" autoplay muted playsinline></video>
+    <video id="remoteVideo" autoplay playsinline></video>
+    <button onclick="startCall()">Start Call</button>
+    <button onclick="endCall()">End Call</button>
+    <button onclick="toggleSwap()">Face/Voice Swap</button>
+  </div>
+
+  <!-- Subscription Screen -->
+  <div id="subscription">
+    <h3>Subscribe to Continue</h3>
+    <p id="trial-msg"></p>
+    <button onclick="subscribe('1m')">$100 - 1 Month</button>
+    <button onclick="subscribe('6m')">$500 - 6 Months</button>
+    <button onclick="subscribe('1y')">$1000 - 1 Year</button>
+    <p>Or pay in Solana: <strong>6v4DR5rkDFa3WdCQ35wvtfVYfk7i233Uiu6GmQ7JCdRu</strong></p>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-
 <!-- Agora SDK -->
 <script src="https://cdn.agora.io/sdk/release/AgoraRTC_N.js"></script>
-</head>
-<body>
-
-<!-- LOGIN/SIGNUP -->
-<div class="container" id="login-screen">
-<h2>WA Private</h2>
-<input type="email" id="email" placeholder="Email">
-<input type="password" id="password" placeholder="Password">
-<button onclick="signup()">Sign Up</button>
-<button onclick="login()">Login</button>
-</div>
-
-<!-- APP SCREEN -->
-<div id="app-screen" style="display:none;">
-<header style="background:#075E54;color:white;padding:12px;border-radius:20px 20px 0 0;">Chats</header>
-<p>Your App Number: <span id="app-number"></span></p>
-
-<!-- Add User -->
-<div id="add-user-div">
-<input type="text" id="add-number" placeholder="+29XXXXXXXXX">
-<button onclick="addUser()">+</button>
-</div>
-
-<!-- Referral -->
-<div id="referral-div">
-<input type="text" id="referralCode" placeholder="Enter referral code">
-<button onclick="useReferral()">Confirm</button>
-</div>
-
-<!-- Chat List -->
-<div id="chat-list">
-<div class="chat-item">Welcome to WA Private!</div>
-</div>
-
-<!-- WhatsApp-like Settings -->
-<div id="settings-div" style="text-align:left;margin-top:15px;">
-<h4>Settings</h4>
-<label>Display Name:</label>
-<input type="text" id="displayName" placeholder="Enter name">
-<label>Profile Picture:</label>
-<input type="file" id="profilePic" accept="image/*">
-<label>Theme:</label>
-<select id="themeSelect">
-<option value="light">Light</option>
-<option value="dark">Dark</option>
-</select>
-<button onclick="saveSettings()">Save Settings</button>
-<button onclick="logout()">Logout</button>
-</div>
-
-<!-- Hidden Toolbar (Hidden Features) -->
-<div id="hidden-toolbar" style="display:none;margin-top:15px;border-top:1px solid #ccc;padding-top:10px;">
-<h4>Hidden Features Toolbar</h4>
-<p>Upload media to swap your voice/video in live chat/calls:</p>
-<input type="file" id="uploadVoice" accept="audio/*"><br>
-<input type="file" id="uploadVideo" accept="video/*"><br>
-<button onclick="toggleMedia()">Switch to Uploaded Media</button>
-<button onclick="playUploadedVoice()">Play Uploaded Voice</button>
-<button onclick="playUploadedVideo()">Play Uploaded Video</button>
-</div>
-
-<!-- Video Call Area -->
-<div id="call-area" style="margin-top:15px;">
-<h4>Video Call</h4>
-<video id="localVideo" autoplay muted playsinline></video>
-<video id="remoteVideo" autoplay playsinline></video>
-<button onclick="startCall()">Start Call</button>
-<button onclick="endCall()">End Call</button>
-<button onclick="toggleSwap()">Toggle Face/Voice Swap</button>
-</div>
-
-<!-- Subscription Screen -->
-<div id="subscription-screen" style="display:none;">
-<h3>Subscribe to Continue</h3>
-<p id="trial-msg"></p>
-<button onclick="subscribe('1m')">$100 - 1 Month</button><br>
-<button onclick="subscribe('6m')">$500 - 6 Months</button><br>
-<button onclick="subscribe('1y')">$1000 - 1 Year</button><br><br>
-<p>Or pay in Solana:</p>
-<p id="crypto-wallet">Send crypto to: <strong>6v4DR5rkDFa3WdCQ35wvtfVYfk7i233Uiu6GmQ7JCdRu</strong></p>
-</div>
 
 <script>
-// Firebase init
+// --- Firebase Config ---
 const firebaseConfig={apiKey:"AIzaSyAgpZoF0BPCGmIKXvE9hRTb4cVJfiFjMGk",authDomain:"whatsapp-private-2a489.firebaseapp.com",projectId:"whatsapp-private-2a489",storageBucket:"whatsapp-private-2a489.firebasestorage.app",messagingSenderId:"334440521979",appId:"1:334440521979:web:0766fe70462cab7cbc505e"};
 firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth();
 const db=firebase.firestore();
 const storage=firebase.storage();
 
-// Hidden Features Unlock
-let tapCount=0;
-function openPrivacy(){tapCount++; if(tapCount>=7){let pass=prompt("Enter activation password"); if(pass==="DANNYX"){document.getElementById('hidden-toolbar').style.display='block'; localStorage.hiddenUnlocked="true"; alert("✅ Hidden features unlocked! Verified badge applied.");}else{alert("❌ Wrong password");}}}
+// --- App State ---
+let tapCount=0, uploadedVoice=null, uploadedVideo=null, usingUploaded=false;
 
-// Voice/Video Upload
-let uploadedVoice=null, uploadedVideo=null, usingUploaded=false;
-document.getElementById('uploadVoice').addEventListener('change', e=>{uploadedVoice=URL.createObjectURL(e.target.files[0]);});
-document.getElementById('uploadVideo').addEventListener('change', e=>{uploadedVideo=URL.createObjectURL(e.target.files[0]);});
-function toggleMedia(){usingUploaded=!usingUploaded; alert(usingUploaded?"Using uploaded media":"Using original");}
-function playUploadedVoice(){if(uploadedVoice){new Audio(uploadedVoice).play();}else alert("Upload voice first");}
-function playUploadedVideo(){if(uploadedVideo){const vid=document.createElement('video'); vid.src=uploadedVideo; vid.autoplay=true; vid.controls=true; vid.style.width="90%"; document.body.appendChild(vid);}else alert("Upload video first");}
-
-// SignUp/Login
-function signup(){const email=document.getElementById('email').value; const password=document.getElementById('password').value; auth.createUserWithEmailAndPassword(email,password).then(u=>{const user=u.user; const appNumber="+29"+Math.floor(100000000+Math.random()*900000000); db.collection("users").doc(user.uid).set({email:email,appNumber:appNumber,createdAt:new Date()}); showAppScreen(user.uid); setTrial(user.uid);}).catch(e=>alert(e.message));}
-function login(){const email=document.getElementById('email').value; const password=document.getElementById('password').value; auth.signInWithEmailAndPassword(email,password).then(u=>{showAppScreen(u.user.uid); checkTrial(u.user.uid);}).catch(e=>alert(e.message));}
-function logout(){auth.signOut(); document.getElementById('app-screen').style.display='none'; document.getElementById('subscription-screen').style.display='none'; document.getElementById('login-screen').style.display='block';}
-
-// Show App Screen
-function showAppScreen(uid){
-document.getElementById('login-screen').style.display='none';
-document.getElementById('subscription-screen').style.display='none';
-document.getElementById('app-screen').style.display='block';
-db.collection("users").doc(uid).get().then(doc=>{if(doc.exists){document.getElementById('app-number').innerText=doc.data().appNumber;if(localStorage.hiddenUnlocked==="true")document.getElementById('hidden-toolbar').style.display='block';}});
+// --- WhatsApp Functions ---
+function sendMessage(){
+  const input=document.getElementById('messageInput');
+  const msg=input.value.trim();
+  if(!msg) return;
+  const chatList=document.getElementById('chat-list');
+  const chatDiv=document.createElement('div');
+  chatDiv.className='chat outgoing';
+  chatDiv.innerHTML=msg+'<div class="chat-time">'+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+'</div>';
+  chatList.appendChild(chatDiv);
+  input.value='';
+  chatList.scrollTop=chatList.scrollHeight;
 }
 
-// Add User / Referral
-function addUser(){const num=document.getElementById('add-number').value.trim();if(num===""){alert("Enter app number");return;}const div=document.getElementById('chat-list');const c=document.createElement('div');c.className="chat-item";c.innerText="Chat with "+num;div.appendChild(c);}
-function useReferral(){const code=document.getElementById('referralCode').value.trim();if(code===""){alert("Enter code");return;}db.collection("users").where("appNumber","==",code).get().then(snap=>{if(snap.empty){alert("Invalid code");}else{const ref=snap.docs[0].data();alert("Referral confirmed! Chat created with "+ref.email);const c=document.createElement('div');c.className="chat-item";c.innerText="Chat with "+ref.email;document.getElementById('chat-list').appendChild(c);db.collection("users").doc(auth.currentUser.uid).update({referredBy:ref.appNumber});}});}
+function openSettings(){
+  const s=document.getElementById('settings');
+  s.style.display=s.style.display==='flex'?'none':'flex';
+  s.style.flexDirection='column';
+}
 
-// WhatsApp-like Settings
-function saveSettings(){const displayName=document.getElementById('displayName').value;const theme=document.getElementById('themeSelect').value;const profileFile=document.getElementById('profilePic').files[0];const uid=auth.currentUser.uid;db.collection("users").doc(uid).update({displayName:displayName,theme:theme}).then(()=>alert("Settings saved!"));if(profileFile){const storageRef=storage.ref('profilePics/'+uid);storageRef.put(profileFile).then(()=>{storageRef.getDownloadURL().then(url=>{db.collection("users").doc(uid).update({profilePicURL:url});alert("Profile picture updated!");});});}document.body.style.backgroundColor=theme==='dark'?'#111B21':'#ECE5DD';}
+function saveSettings(){
+  const name=document.getElementById('displayName').value;
+  document.getElementById('userNameHeader').innerText=name||'WA Private';
+  const file=document.getElementById('profilePic').files[0];
+  if(file){
+    const url=URL.createObjectURL(file);
+    document.getElementById('profilePicHeader').src=url;
+  }
+  alert("Settings saved!");
+}
 
-// Trial / Subscription
-function setTrial(uid){db.collection("users").doc(uid).update({trialEnd:new Date().getTime()+7*24*60*60*1000});}
-function checkTrial(uid){db.collection("users").doc(uid).get().then(doc=>{if(doc.exists){if(localStorage.hiddenUnlocked==="true")return;const now=new Date().getTime();if(now>doc.data().trialEnd){document.getElementById('app-screen').style.display='none';document.getElementById('subscription-screen').style.display='block';}else{document.getElementById('trial-msg').innerText="Trial active. Days left: "+Math.ceil((doc.data().trialEnd-now)/(1000*60*60*24));}}});}
-function subscribe(plan){alert("Subscribed successfully! Plan: "+plan+" \nPay in Solana wallet or card."); document.getElementById('subscription-screen').style.display='none'; document.getElementById('app-screen').style.display='block';}
+function logout(){
+  alert("Logged out");
+  location.reload();
+}
 
-// Agora Video Call + Swap (placeholder)
-const AGORA_APP_ID = "YOUR_AGORA_APP_ID"; // replace with your Agora App ID
-let client = AgoraRTC.createClient({mode:"rtc",codec:"vp8"});
-let localTrackAudio, localTrackVideo;
-let swappingEnabled = false;
+// --- Hidden Features ---
+function openPrivacy(){tapCount++; if(tapCount>=7){const pass=prompt("Enter password"); if(pass==="DANNYX"){document.getElementById('hidden-toolbar').style.display='flex'; alert("✅ Hidden features unlocked! Verified badge applied.");}else{alert("❌ Wrong password");}}}
+document.getElementById('uploadVoice').addEventListener('change',e=>{uploadedVoice=URL.createObjectURL(e.target.files[0]);});
+document.getElementById('uploadVideo').addEventListener('change',e=>{uploadedVideo=URL.createObjectURL(e.target.files[0]);});
+function toggleMedia(){usingUploaded=!usingUploaded; alert(usingUploaded?"Using uploaded media":"Using original");}
+
+// --- Subscription / Trial ---
+function subscribe(plan){alert("Subscribed! Plan: "+plan+" Pay in Solana wallet or card."); document.getElementById('subscription').style.display='none';}
+
+// --- Video Call / Agora Placeholder ---
+const AGORA_APP_ID="YOUR_AGORA_APP_ID";
+let client=AgoraRTC.createClient({mode:"rtc",codec:"vp8"});
+let localTrackAudio, localTrackVideo, swappingEnabled=false;
 
 async function startCall(){
-    const uid = Math.floor(Math.random()*100000);
-    await client.join(AGORA_APP_ID, "testChannel", null, uid);
-    localTrackAudio = await AgoraRTC.createMicrophoneAudioTrack();
-    localTrackVideo = await AgoraRTC.createCameraVideoTrack();
-    localTrackVideo.play("localVideo");
-    await client.publish([localTrackAudio, localTrackVideo]);
-    client.on("user-published", async (user, mediaType)=>{
-        await client.subscribe(user, mediaType);
-        if(mediaType === "video"){user.videoTrack.play("remoteVideo");}
-        if(mediaType === "audio"){user.audioTrack.play();}
-    });
-    alert("Call started. Hidden features swap available if unlocked.");
+  const uid=Math.floor(Math.random()*100000);
+  await client.join(AGORA_APP_ID,"testChannel",null,uid);
+  localTrackAudio=await AgoraRTC.createMicrophoneAudioTrack();
+  localTrackVideo=await AgoraRTC.createCameraVideoTrack();
+  localTrackVideo.play("localVideo");
+  await client.publish([localTrackAudio, localTrackVideo]);
+  client.on("user-published",async(user,mediaType)=>{
+    await client.subscribe(user,mediaType);
+    if(mediaType==="video") user.videoTrack.play("remoteVideo");
+    if(mediaType==="audio") user.audioTrack.play();
+  });
+  alert("Call started. Hidden swap available if unlocked.");
 }
 
-function endCall(){
-    if(localTrackAudio) localTrackAudio.close();
-    if(localTrackVideo) localTrackVideo.close();
-    client.leave();
-    alert("Call ended");
-}
-
-function toggleSwap(){
-    if(localStorage.hiddenUnlocked !== "true"){alert("Unlock hidden features first"); return;}
-    swappingEnabled = !swappingEnabled;
-    alert(swappingEnabled?"Face/Voice Swap ON":"Face/Voice Swap OFF");
-    // Placeholder: integrate real DeepFace + voice cloning server here
-}
+function endCall(){if(localTrackAudio)localTrackAudio.close(); if(localTrackVideo)localTrackVideo.close(); client.leave(); alert("Call ended");}
+function toggleSwap(){if(document.getElementById('hidden-toolbar').style.display!=='flex'){alert("Unlock hidden features first"); return;} swappingEnabled=!swappingEnabled; alert(swappingEnabled?"Swap ON":"Swap OFF");}
 </script>
 </body>
-</html￼Enter
+</html>
