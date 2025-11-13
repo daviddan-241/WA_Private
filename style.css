@@ -6,6 +6,7 @@
   --panel: #fff;
 }
 
+/* general */
 *{box-sizing:border-box;font-family:Inter, Roboto, Arial, sans-serif}
 body{margin:0;background:var(--bg);color:#111}
 
@@ -56,6 +57,17 @@ body{margin:0;background:var(--bg);color:#111}
 .message.me{align-self:flex-end;background:#DCF8C6}
 .message.them{align-self:flex-start;background:#fff;border:1px solid #eee}
 .msg-time{font-size:11px;color:var(--muted);margin-top:6px;text-align:right}
+
+/* Live Swap styles */
+.message.swap-me{background: linear-gradient(135deg, #a0e9ff, #00bfff); color:#000}
+.message.swap-them{background: linear-gradient(135deg, #ffb6b9, #ff6f61); color:#000}
+.message.swap-preview{filter: hue-rotate(180deg) saturate(1.5)}
+
+.swap-banner{
+  position: fixed; top:0; left:50%; transform:translateX(-50%);
+  background:#ff9800; color:#fff; padding:10px 20px; border-radius:0 0 10px 10px;
+  z-index:9999; font-weight:bold; box-shadow:0 3px 10px rgba(0,0,0,0.2);
+}
 
 /* composer */
 .composer{display:flex;gap:8px;padding:10px;border-top:1px solid #eee;align-items:center}
