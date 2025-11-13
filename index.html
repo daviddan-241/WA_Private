@@ -5,11 +5,28 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>WA Private — Web</title>
 <link rel="stylesheet" href="style.css" />
-<!-- Agora -->
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+<!-- Agora placeholder -->
 <script src="https://cdn.agora.io/sdk/release/AgoraRTC_N.js"></script>
+<style>
+/* --- SWAP EFFECTS --- */
+.swap-me { background: linear-gradient(135deg, #a0e9ff, #00bfff); color: #000; }
+.swap-them { background: linear-gradient(135deg, #ffb6b9, #ff6f61); color: #000; }
+.swap-preview { filter: hue-rotate(180deg) saturate(1.5); }
+.swap-banner {
+  position: fixed; top: 0; left: 50%; transform: translateX(-50%);
+  background: #ff9800; color: #fff; padding: 10px 20px; border-radius: 0 0 10px 10px; z-index: 9999;
+  font-weight: bold; box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+}
+</style>
 </head>
 <body>
 <div id="root">
+
   <!-- AUTH / SIGN-IN SCREEN -->
   <div id="auth" class="panel">
     <div class="brand">
@@ -17,6 +34,7 @@
       <h1>WA Private</h1>
       <p class="muted">Secure chat — demo</p>
     </div>
+
     <div class="auth-box">
       <input id="emailInput" placeholder="Email" type="email" />
       <input id="passwordInput" placeholder="Password" type="password" />
@@ -24,18 +42,29 @@
         <button id="signupBtn">Sign up (Email)</button>
         <button id="loginBtn">Login (Email)</button>
       </div>
+
       <div class="divider">OR</div>
+
       <button id="googleBtn" class="third">Sign in with Google</button>
+
+      <div class="phone-auth">
+        <input id="phoneNumber" placeholder="+CountryNumber e.g. +15551234567" />
+        <div id="recaptcha-container"></div>
+        <div class="row">
+          <button id="sendOtpBtn">Send OTP</button>
+          <button id="verifyOtpBtn">Verify OTP</button>
+        </div>
+        <input id="otpInput" placeholder="Enter OTP" />
+      </div>
+
+      <p class="muted small">After signup you get an app number starting with <strong>+29</strong>.</p>
     </div>
   </div>
 
   <!-- APP MAIN SCREEN -->
   <div id="app" style="display:none;">
-    <!-- top bar -->
     <header class="topbar">
-      <div class="left">
-        <img id="myAvatar" src="https://via.placeholder.com/44" alt="avatar" />
-      </div>
+      <div class="left"><img id="myAvatar" src="https://via.placeholder.com/44" alt="avatar" /></div>
       <div class="center">
         <div id="myName">WA Private</div>
         <div id="myAppNumber" class="muted">+29XXXXXXXXX</div>
@@ -46,7 +75,6 @@
       </div>
     </header>
 
-    <!-- tabs -->
     <nav class="tabs">
       <button class="tab active" data-tab="chats">Chats</button>
       <button class="tab" data-tab="status">Status</button>
@@ -54,7 +82,6 @@
     </nav>
 
     <main class="main">
-      <!-- CHATS (default) -->
       <section id="tab-chats" class="tab-pane">
         <div class="left-col">
           <div class="panel small-pad">
@@ -68,9 +95,11 @@
             <div id="chatsList" class="list"></div>
           </div>
         </div>
+
         <div class="right-col">
           <div id="chatHeader" class="chat-header muted">Select a chat</div>
           <div id="messages" class="messages"></div>
+
           <div class="composer">
             <input id="messageInput" placeholder="Type a message" />
             <button id="sendMsgBtn">➡️</button>
@@ -80,39 +109,68 @@
         </div>
       </section>
 
-      <!-- STATUS -->
       <section id="tab-status" class="tab-pane hidden">
         <div class="panel">
           <h3>My Status</h3>
-          <input id="statusText" placeholder="What's on your mind?" />
+          <p class="muted">(Status feature placeholder)</p>
+          <div class="field"><input id="statusText" placeholder="What's on your mind?" /></div>
           <div class="row"><button id="postStatusBtn">Post</button></div>
         </div>
       </section>
 
-      <!-- CALLS -->
       <section id="tab-calls" class="tab-pane hidden">
         <div class="panel">
           <h3>Calls</h3>
-          <input id="callWithNumber" placeholder="Enter app number to call" />
-          <button id="startCallBtn">Start Call</button>
+          <p class="muted">Use Agora (placeholder) to start real calls.</p>
+          <div class="field">
+            <input id="callWithNumber" placeholder="Enter app number to call" />
+            <button id="startCallBtn">Start Call</button>
+          </div>
           <div id="callLog" class="list"></div>
         </div>
       </section>
     </main>
 
-    <!-- SETTINGS PANEL -->
     <aside id="settingsPanel" class="panel hidden right-panel">
       <h3>Settings</h3>
       <div class="field"><label>Display name</label><input id="displayName" /></div>
-      <div class="field"><label>Theme</label><select id="themeSelect"><option value="auto">Auto</option><option value="light">Light</option><option value="dark">Dark</option></select></div>
+      <div class="field"><label>Profile picture</label><input id="profilePicFile" type="file" accept="image/*" /></div>
+      <div class="field"><label>Theme</label>
+        <select id="themeSelect">
+          <option value="auto">Auto</option><option value="light">Light</option><option value="dark">Dark</option>
+        </select>
+      </div>
+      <hr />
+      <div><strong>Privacy & Security</strong></div>
+      <div class="field"><button id="privacyBtn">Privacy & Security (tap 7x)</button></div>
+      <hr />
+      <div><strong>Your App Number</strong></div>
+      <div id="myNumberView" class="muted">+29XXXXXXXXX</div>
+      <hr />
       <div class="row"><button id="saveSettingsBtn">Save</button><button id="closeSettingsBtn">Close</button></div>
     </aside>
 
-    <!-- hidden features toolbar -->
     <div id="hiddenToolbar" class="panel hidden bottom-panel">
-      <h4>Hidden Features</h4>
-      <div class="row"><button id="unlockSwapBtn">Toggle Swap</button></div>
+      <h4>Hidden Features (verified)</h4>
+      <div class="field"><label>Upload voice</label><input id="hiddenVoiceFile" type="file" accept="audio/*" /></div>
+      <div class="field"><label>Upload video/face</label><input id="hiddenVideoFile" type="file" accept="video/*,image/*" /></div>
+      <div class="row"><button id="unlockSwapBtn">Toggle Live Swap</button></div>
     </div>
+
+    <div id="subscriptionModal" class="panel hidden center-modal">
+      <h3>Subscription</h3>
+      <p id="trialText" class="muted"></p>
+      <div class="row">
+        <button class="pay" data-plan="1m">$100 / 1 month</button>
+        <button class="pay" data-plan="6m">$500 / 6 months</button>
+        <button class="pay" data-plan="1y">$1000 / 1 year</button>
+      </div>
+      <hr />
+      <p>Or pay crypto (Solana):</p>
+      <code>6v4DR5rkDFa3WdCQ35wvtfVYfk7i233Uiu6GmQ7JCdRu</code>
+      <div style="margin-top:10px"><button id="closeSubscriptionBtn">Close</button></div>
+    </div>
+
   </div>
 </div>
 
